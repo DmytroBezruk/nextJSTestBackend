@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     # Add the apps here
     "core",
     "accounts",
+    "pulp_fiction",
 ]
 
 if SENTRY_DSN:
