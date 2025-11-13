@@ -1,0 +1,28 @@
+
+{$SITE_DOMAIN} {
+    reverse_proxy /flower/* flower:5555
+    reverse_proxy /* django:8000
+
+    @api path /api/* /admin/*
+	@docs path /api/schema/ /api/swagger-ui/
+	handle @api {
+		basicauth @docs {
+			root {$CADDY_PASSWORD}
+		}
+		reverse_proxy api:8000
+	}
+
+    # Serve static files
+    file_server /static/* {
+        root /path/to/staticfiles  # Replace with the actual path to STATIC_ROOT
+    }
+
+    # Optionally, handle media files if you have them
+    file_server /media/* {
+        root /path/to/mediafiles  # If you have media files
+    }
+}
+
+# www.{$SITE_DOMAIN} {
+#    redir https://{$SITE_DOMAIN}{uri}
+# }
