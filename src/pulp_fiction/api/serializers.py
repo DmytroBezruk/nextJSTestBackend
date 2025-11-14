@@ -27,3 +27,18 @@ class BookSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"non_field_errors": ["Book with this Name and Author already exists."]})
         return attrs
 
+
+class MonthBucketSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    books = serializers.IntegerField()
+    authors = serializers.IntegerField()
+
+
+class AnalyticsSerializer(serializers.Serializer):
+    totalBooks = serializers.IntegerField()
+    totalAuthors = serializers.IntegerField()
+    newBooksLast30 = serializers.IntegerField()
+    newAuthorsLast30 = serializers.IntegerField()
+    booksGrowthPct = serializers.FloatField()
+    authorsGrowthPct = serializers.FloatField()
+    buckets = MonthBucketSerializer(many=True)
