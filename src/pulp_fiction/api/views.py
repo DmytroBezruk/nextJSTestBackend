@@ -1,5 +1,6 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -27,6 +28,16 @@ class AuthorViewSet(viewsets.ModelViewSet):
     serializer_class = AuthorSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "pk"
+
+    @extend_schema(
+        responses=AuthorSerializer(many=True),
+        description="Return all authors without pagination."
+    )
+    @action(detail=False, methods=["get"], pagination_class=None)
+    def all(self, request):
+        authors = self.get_queryset()
+        serializer = self.get_serializer(authors, many=True)
+        return Response(serializer.data)
 
 
 @extend_schema_view(
