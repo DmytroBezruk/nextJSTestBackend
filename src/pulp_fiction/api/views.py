@@ -26,7 +26,6 @@ class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     permission_classes = [IsAuthenticated]
-    # pagination_class = PageNumberPagination
     lookup_field = "pk"
 
 
@@ -42,7 +41,6 @@ class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.select_related("author").all()
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticated]
-    # pagination_class = PageNumberPagination
     lookup_field = "pk"
 
     def get_queryset(self):
