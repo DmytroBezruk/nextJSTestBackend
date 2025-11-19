@@ -6,6 +6,7 @@ from decouple import Csv, config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
+PROJECT_ROOT = BASE_DIR.parent.parent  # backend root directory
 PROJECT_NAME = config("PROJECT_NAME", default="NEWPROJECTNAME")
 
 
@@ -146,12 +147,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = "/static/"
-STATIC_ROOT = config("STATIC_ROOT", default=os.path.join(BASE_DIR, "/data/staticfiles"))
+STATIC_ROOT = config("STATIC_ROOT", default=str(PROJECT_ROOT / "data" / "staticfiles"))
 
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "config", "static"),)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = config('MEDIA_ROOT', default=os.path.join(BASE_DIR, '/data/media'))
+MEDIA_ROOT = config('MEDIA_ROOT', default=str(PROJECT_ROOT / 'data' / 'media'))
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
@@ -202,6 +203,11 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 9,
+    "DEFAULT_PARSER_CLASSES": (
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
+    ),
 }
 
 SPECTACULAR_SETTINGS = {
@@ -209,6 +215,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API documentation for Your Project",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,  # separate read/write representations so write uses multipart
     "SECURITY_DEFINITIONS": {
         "Bearer": {
             "type": "http",

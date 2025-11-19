@@ -91,6 +91,11 @@ RUN mkdir -p /data/staticfiles \
     && chown -R appuser:appuser /data/staticfiles \
     && chmod 775 /data/staticfiles
 
+RUN mkdir -p /data/media \
+    && chown -R appuser:appuser /data/media \
+    && chmod 775 /data/media \
+    && chmod g+s /data/media
+
 # Switch back to non-root user
 USER appuser
 WORKDIR /opt/project/src

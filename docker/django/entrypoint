@@ -67,7 +67,12 @@ help      : Show this message
 """
 }
 
+# In the entrypoint script, add this to run_setup_commands() function
 run_setup_commands(){
+  # Create media directory if it doesn't exist
+  mkdir -p /data/media
+  chmod 775 /data/media
+
   if [ "$COLLECTSTATIC_ON_STARTUP" = "1" ] ; then
     poetry run python manage.py collectstatic --noinput
   fi

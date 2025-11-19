@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, re_path
 from drf_spectacular.views import (
@@ -28,15 +29,9 @@ urlpatterns = [
     path("", include("pulp_fiction.urls")),
 ]
 
-# Serve media files via Django
-# import django.views.static
-# urlpatterns += [
-#     re_path(r'media/(?P<path>.*)$',
-#         django.views.static.serve, {
-#             'document_root': settings.MEDIA_ROOT,
-#             'show_indexes': True,
-#         }),
-# ]
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 # For debug mode only
