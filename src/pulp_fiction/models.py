@@ -9,6 +9,8 @@ class Author(models.Model):
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
 
+    image = models.ImageField(_("Image"), upload_to="images/author/", null=True, blank=True)
+
     class Meta:
         verbose_name = _("Author")
         verbose_name_plural = _("Authors")
@@ -24,6 +26,8 @@ class Book(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="books")
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
+
+    image = models.ImageField(_("Image"), upload_to="images/book/", blank=True, null=True)
 
     class Meta:
         verbose_name = _("Book")

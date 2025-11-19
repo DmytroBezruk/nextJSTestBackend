@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from django.db.models import Count
 from django.db.models.functions import TruncMonth
@@ -12,22 +13,50 @@ from django.utils import timezone
 
 from pulp_fiction.models import Author, Book
 
-from .serializers import AuthorSerializer, BookSerializer, AnalyticsSerializer
+from .serializers import (
+    AuthorSerializer,
+    BookSerializer,
+    AnalyticsSerializer,
+    AuthorCreateSerializer,
+    BookCreateUpdateSerializer,
+)
 
 
 @extend_schema_view(
     list=extend_schema(responses=AuthorSerializer),
     retrieve=extend_schema(responses=AuthorSerializer),
-    create=extend_schema(request=AuthorSerializer, responses=AuthorSerializer),
-    update=extend_schema(request=AuthorSerializer, responses=AuthorSerializer),
-    partial_update=extend_schema(request=AuthorSerializer, responses=AuthorSerializer),
+    create=extend_schema(
+        request=AuthorCreateSerializer,
+        responses=AuthorSerializer,
+        description="Create an author (multipart/form-data with optional image)",
+    ),
+    update=extend_schema(
+        request=AuthorCreateSerializer,
+        responses=AuthorSerializer,
+        description="Update an author (multipart/form-data with optional image)",
+    ),
+    partial_update=extend_schema(
+        request=AuthorCreateSerializer,
+        responses=AuthorSerializer,
+        description="Partially update an author (multipart/form-data with optional image)",
+    ),
     destroy=extend_schema(responses=None),
 )
 class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()
-    serializer_class = AuthorSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "pk"
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
+
+    def get_serializer_class(self):
+        if self.action in {"create", "update", "partial_update"}:
+            return AuthorCreateSerializer
+        return AuthorSerializer
+
+    def get_parser_classes(self):  # drf-spectacular will inspect this per action
+        if self.action in {"create", "update", "partial_update"}:
+            return [MultiPartParser, FormParser]  # limit to multipart/form-data for write operations
+        return [JSONParser]
 
     @extend_schema(
         responses=AuthorSerializer(many=True),
@@ -43,16 +72,38 @@ class AuthorViewSet(viewsets.ModelViewSet):
 @extend_schema_view(
     list=extend_schema(responses=BookSerializer),
     retrieve=extend_schema(responses=BookSerializer),
-    create=extend_schema(request=BookSerializer, responses=BookSerializer),
-    update=extend_schema(request=BookSerializer, responses=BookSerializer),
-    partial_update=extend_schema(request=BookSerializer, responses=BookSerializer),
-    destroy=extend_schema(responses=None),
+    create=extend_schema(
+        request=BookCreateUpdateSerializer,
+        responses=BookSerializer,
+        description="Create a book (multipart/form-data, include image and author_id).",
+    ),
+    update=extend_schema(
+        request=BookCreateUpdateSerializer,
+        responses=BookSerializer,
+        description="Update a book (multipart/form-data, include image and author_id).",
+    ),
+    partial_update=extend_schema(
+        request=BookCreateUpdateSerializer,
+        responses=BookSerializer,
+        description="Partially update a book (multipart/form-data).",
+    ),
 )
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.select_related("author").all()
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "pk"
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
+
+    def get_serializer_class(self):
+        if self.action in {"create", "update", "partial_update"}:
+            return BookCreateUpdateSerializer
+        return BookSerializer
+
+    def get_parser_classes(self):
+        if self.action in {"create", "update", "partial_update"}:
+            return [MultiPartParser, FormParser]
+        return [JSONParser]
 
     def get_queryset(self):
         qs = super().get_queryset()
