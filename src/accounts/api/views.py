@@ -23,6 +23,7 @@ from .serializers import ChangePasswordSerializer, MyTokenObtainPairSerializer, 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    authentication_classes = ()
 
     @extend_schema(
         responses=UserSerializer,
@@ -40,26 +41,30 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # mail settings
-        current_site = settings.SITE_URL
-        mail_subject = "Activate your account"
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = account_activation_token.make_token(user)
-        activation_link = f"http://{current_site}/api/activate/{uid}/{token}/"
-        message = render_to_string(
-            "email/activation_email.html",
-            {
-                "user": user,
-                "activation_link": activation_link,
-            },
-        )
+        # # mail settings
+        # current_site = settings.SITE_URL
+        # mail_subject = "Activate your account"
+        # uid = urlsafe_base64_encode(force_bytes(user.pk))
+        # token = account_activation_token.make_token(user)
+        # activation_link = f"http://{current_site}/api/activate/{uid}/{token}/"
+        # message = render_to_string(
+        #     "email/activation_email.html",
+        #     {
+        #         "user": user,
+        #         "activation_link": activation_link,
+        #     },
+        # )
+        #
+        # # Send verification email via Celery
+        # send_email.delay(
+        #     user.id,
+        #     mail_subject=mail_subject,
+        #     message=message,
+        # )
 
-        # Send verification email via Celery
-        send_email.delay(
-            user.id,
-            mail_subject=mail_subject,
-            message=message,
-        )
+        user.is_active = True
+        user.is_verified = True
+        user.save()
 
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
