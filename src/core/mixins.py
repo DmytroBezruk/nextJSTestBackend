@@ -37,10 +37,6 @@ class UserReferenceMixin(models.Model):
 
     def save(self, *args, **kwargs):
         current_user = get_current_user()
-        print(f'\n{current_user = }\n')
-        print(f'\n{current_user.name = }\n')
-        print(f'\n{current_user.email = }\n')
-        print(f'\n{current_user.is_authenticated = }\n')
         if current_user and current_user.is_authenticated:
             if not self.pk and not self.created_by:
                 self.created_by = current_user

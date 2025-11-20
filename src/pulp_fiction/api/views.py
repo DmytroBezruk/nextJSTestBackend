@@ -10,7 +10,7 @@ from django.db.models import Count
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
-
+from core.user_context import get_current_user
 from pulp_fiction.models import Author, Book
 
 from .serializers import (
@@ -43,7 +43,7 @@ from .serializers import (
     destroy=extend_schema(responses=None),
 )
 class AuthorViewSet(viewsets.ModelViewSet):
-    queryset = Author.objects.all()
+    queryset = Author.objects.filter(created_by=get_current_user())
     permission_classes = [IsAuthenticated]
     lookup_field = "pk"
     parser_classes = (MultiPartParser, FormParser, JSONParser)
@@ -89,7 +89,7 @@ class AuthorViewSet(viewsets.ModelViewSet):
     ),
 )
 class BookViewSet(viewsets.ModelViewSet):
-    queryset = Book.objects.select_related("author").all()
+    queryset = Book.objects.select_related("author").filter(created_by=get_current_user())
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "pk"
@@ -125,15 +125,19 @@ class AnalyticsView(viewsets.ViewSet):
         prev30_start = now - timezone.timedelta(days=60)
         prev30_end = last30
 
+        user = get_current_user()
+
+        user_filter = {"created_by": user} if user else {}
+
         # Totals
-        total_books = Book.objects.count()
-        total_authors = Author.objects.count()
+        total_books = Book.objects.filter(**user_filter).count()
+        total_authors = Author.objects.filter(**user_filter).count()
 
         # New entities
-        new_books_last30 = Book.objects.filter(created_at__gte=last30).count()
-        new_books_prev30 = Book.objects.filter(created_at__gte=prev30_start, created_at__lt=prev30_end).count()
-        new_authors_last30 = Author.objects.filter(created_at__gte=last30).count()
-        new_authors_prev30 = Author.objects.filter(created_at__gte=prev30_start, created_at__lt=prev30_end).count()
+        new_books_last30 = Book.objects.filter(created_at__gte=last30, **user_filter).count()
+        new_books_prev30 = Book.objects.filter(created_at__gte=prev30_start, created_at__lt=prev30_end, **user_filter).count()
+        new_authors_last30 = Author.objects.filter(created_at__gte=last30, **user_filter).count()
+        new_authors_prev30 = Author.objects.filter(created_at__gte=prev30_start, created_at__lt=prev30_end, **user_filter).count()
 
         def pct_change(current: int, prev: int) -> float:
             if prev == 0:
@@ -157,14 +161,14 @@ class AnalyticsView(viewsets.ViewSet):
 
         # Aggregate per month using TruncMonth
         book_months = (
-            Book.objects.filter(created_at__gte=start_month)
+            Book.objects.filter(created_at__gte=start_month, **user_filter)
             .annotate(month=TruncMonth("created_at"))
             .values("month")
             .annotate(count=Count("id"))
             .order_by("month")
         )
         author_months = (
-            Author.objects.filter(created_at__gte=start_month)
+            Author.objects.filter(created_at__gte=start_month, **user_filter)
             .annotate(month=TruncMonth("created_at"))
             .values("month")
             .annotate(count=Count("id"))
