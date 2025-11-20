@@ -41,3 +41,12 @@ class UserReferenceMixin(models.Model):
             if not self.pk and not self.created_by:
                 self.created_by = current_user
         super().save(*args, **kwargs)
+
+
+class UserScopedQuerysetMixin:
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = get_current_user()
+        if not user or not user.is_authenticated:
+            return qs.none()
+        return qs.filter(created_by=user)

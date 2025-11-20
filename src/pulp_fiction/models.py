@@ -4,7 +4,7 @@ from core.mixins import UserReferenceMixin
 
 
 class Author(UserReferenceMixin, models.Model):
-    name = models.CharField(_("Name"), max_length=255, unique=True)
+    name = models.CharField(_("Name"), max_length=255)
     details = models.TextField(_("Details"), blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
@@ -14,6 +14,7 @@ class Author(UserReferenceMixin, models.Model):
     class Meta:
         verbose_name = _("Author")
         verbose_name_plural = _("Authors")
+        unique_together = ("name", "created_by")
         ordering = ["name"]
 
     def __str__(self):
@@ -32,10 +33,10 @@ class Book(UserReferenceMixin, models.Model):
     class Meta:
         verbose_name = _("Book")
         verbose_name_plural = _("Books")
-        unique_together = ("name", "author")
+        unique_together = ("name", "author", "created_by")
         ordering = ["name"]
         indexes = [
-            models.Index(fields=["name", "author"], name="book_name_author_idx"),
+            models.Index(fields=["name", "author", "created_by"], name="book_name_creator_author_idx"),
         ]
 
     def __str__(self):

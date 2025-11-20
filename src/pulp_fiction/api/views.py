@@ -10,6 +10,7 @@ from django.db.models import Count
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
+from core.mixins import UserScopedQuerysetMixin
 from core.user_context import get_current_user
 from pulp_fiction.models import Author, Book
 
@@ -42,8 +43,8 @@ from .serializers import (
     ),
     destroy=extend_schema(responses=None),
 )
-class AuthorViewSet(viewsets.ModelViewSet):
-    queryset = Author.objects.filter(created_by=get_current_user())
+class AuthorViewSet(UserScopedQuerysetMixin, viewsets.ModelViewSet):
+    queryset = Author.objects.all()
     permission_classes = [IsAuthenticated]
     lookup_field = "pk"
     parser_classes = (MultiPartParser, FormParser, JSONParser)
@@ -88,8 +89,8 @@ class AuthorViewSet(viewsets.ModelViewSet):
         description="Partially update a book (multipart/form-data).",
     ),
 )
-class BookViewSet(viewsets.ModelViewSet):
-    queryset = Book.objects.select_related("author").filter(created_by=get_current_user())
+class BookViewSet(UserScopedQuerysetMixin, viewsets.ModelViewSet):
+    queryset = Book.objects.select_related("author").all()
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "pk"
