@@ -1,9 +1,9 @@
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from core.mixins import UserReferenceMixin
 
 
-class Author(models.Model):
+class Author(UserReferenceMixin, models.Model):
     name = models.CharField(_("Name"), max_length=255, unique=True)
     details = models.TextField(_("Details"), blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
@@ -20,7 +20,7 @@ class Author(models.Model):
         return self.name
 
 
-class Book(models.Model):
+class Book(UserReferenceMixin, models.Model):
     name = models.CharField(_("Name"), max_length=255)
     content = models.TextField(_("Content"), blank=True)
     author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="books")
