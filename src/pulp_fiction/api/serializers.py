@@ -2,6 +2,7 @@ from rest_framework import serializers
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 
+from core.user_context import get_current_user
 from pulp_fiction.models import Author, Book
 
 
@@ -23,9 +24,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     def get_image_url(self, obj):
         request = self.context.get("request")
         if obj.image and hasattr(obj.image, "url"):
-            if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
+            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
         return None
 
 
@@ -40,37 +39,64 @@ class AuthorCreateSerializer(serializers.ModelSerializer):
         model = Author
         fields = ("name", "details", "image")
 
+    def validate(self, attrs):
+        user = get_current_user()
+
+        name = attrs.get("name") or (self.instance and self.instance.name)
+
+        qs = Author.objects.filter(name=name, created_by=user)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise serializers.ValidationError(
+                {"non_field_errors": ["Author with this Name already exists for this user."]}
+            )
+        return attrs
+
+
 
 class BookSerializer(serializers.ModelSerializer):
-    author_id = serializers.PrimaryKeyRelatedField(source="author", queryset=Author.objects.all(), write_only=True)
+    author_id = serializers.PrimaryKeyRelatedField(
+        source="author", queryset=Author.objects.all(), write_only=True
+    )
     author = AuthorSerializer(read_only=True)
     image = UploadImageField(required=False, allow_null=True)
     image_url = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Book
-        fields = ("id", "name", "content", "image", "image_url", "author", "author_id", "created_at", "updated_at")
+        fields = (
+            "id", "name", "content", "image", "image_url",
+            "author", "author_id", "created_at", "updated_at"
+        )
         read_only_fields = ("id", "created_at", "updated_at", "author", "image_url")
 
     def get_image_url(self, obj):
         request = self.context.get("request")
         if obj.image and hasattr(obj.image, "url"):
-            if request:
-                return request.build_absolute_uri(obj.image.url)
-            return obj.image.url
+            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
         return None
 
     def validate(self, attrs):
-        # Enforce unique_together validation with a clear error
-        author = attrs.get("author") or self.instance and self.instance.author
-        name = attrs.get("name") or self.instance and self.instance.name
-        if author and name and Book.objects.filter(author=author, name=name).exclude(pk=getattr(self.instance, "pk", None)).exists():
-            raise serializers.ValidationError({"non_field_errors": ["Book with this Name and Author already exists."]})
+        request = self.context.get("request")
+        user = request.user if request else None
+
+        author = attrs.get("author") or (self.instance and self.instance.author)
+        name = attrs.get("name") or (self.instance and self.instance.name)
+
+        qs = Book.objects.filter(name=name, author=author, created_by=user)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise serializers.ValidationError(
+                {"non_field_errors": ["Book with this Name and Author already exists for this user."]}
+            )
         return attrs
 
 
 class BookCreateUpdateSerializer(serializers.ModelSerializer):
-    """Serializer used for create/update operations with multipart form including image."""
     author_id = serializers.PrimaryKeyRelatedField(source="author", queryset=Author.objects.all())
     image = UploadImageField(required=False, allow_null=True)
 
@@ -79,10 +105,20 @@ class BookCreateUpdateSerializer(serializers.ModelSerializer):
         fields = ("name", "content", "image", "author_id")
 
     def validate(self, attrs):
-        author = attrs.get("author") or self.instance and self.instance.author
-        name = attrs.get("name") or self.instance and self.instance.name
-        if author and name and Book.objects.filter(author=author, name=name).exclude(pk=getattr(self.instance, "pk", None)).exists():
-            raise serializers.ValidationError({"non_field_errors": ["Book with this Name and Author already exists."]})
+        request = self.context.get("request")
+        user = request.user if request else None
+
+        author = attrs.get("author") or (self.instance and self.instance.author)
+        name = attrs.get("name") or (self.instance and self.instance.name)
+
+        qs = Book.objects.filter(name=name, author=author, created_by=user)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            raise serializers.ValidationError(
+                {"non_field_errors": ["Book with this Name and Author already exists for this user."]}
+            )
         return attrs
 
 
