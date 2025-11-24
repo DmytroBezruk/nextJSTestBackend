@@ -47,6 +47,20 @@ test = ["anyio[trio]", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=
 trio = ["trio (<0.22)"]
 
 [[package]]
+name = "ascii-magic"
+version = "2.7.2"
+description = "Converts pictures into ASCII art"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "ascii_magic-2.7.2-py3-none-any.whl", hash = "sha256:a797c937e3cb0b2e2edb4e580f4b195e27ae4feac576cb2bbd707a1668f24d85"},
+    {file = "ascii_magic-2.7.2.tar.gz", hash = "sha256:9ec334fead998dcf469c604bf8c18d3f408c30ab608a340d8fd607a25e074cb8"},
+]
+
+[package.dependencies]
+Pillow = "*"
+
+[[package]]
 name = "asgiref"
 version = "3.10.0"
 description = "ASGI specs, helper code, and adapters"
@@ -2933,4 +2947,4 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "5c43f6c6cccf082bf0a23cc4af1ecb9f5cbc85c7f6178c8ce8b14b8c7adc2a8d"
+content-hash = "ba892169481a662fb24daef2b71572433928ac565581a1e7555cb3655b033dab"

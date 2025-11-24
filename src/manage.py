@@ -23,4 +23,12 @@ def main():
 
 
 if __name__ == "__main__":
+    from ascii_magic import AsciiArt
+
+    my_art = AsciiArt.from_image('moon.jpg')
+    my_art.to_terminal()
+
+    my_art2 = AsciiArt.from_image('moon2.jpg')
+    my_art2.to_terminal()
+
     main()

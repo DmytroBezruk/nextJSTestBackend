@@ -38,6 +38,8 @@ uvicorn = {version = "^0.27", extras = ["standard"]}
 watchgod = "^0.8"
 werkzeug = "^3.0"
 whitenoise = "^6.6"
+ascii-magic = "^2.7.2"
+colorama = "^0.4.6"
 
 [tool.poetry.group.dev.dependencies]
 django-debug-toolbar = "^4.2"
